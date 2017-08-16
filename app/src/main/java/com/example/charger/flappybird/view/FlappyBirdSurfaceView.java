@@ -35,8 +35,8 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
     private Thread mThread;
     private boolean isRunning;
 
-    private int mWidth;
-    private int mHeight;
+    private int mGameWidth;
+    private int mGameHeight;
     private RectF mGamePanelRect = new RectF();
     private Bitmap mBackground;
 
@@ -57,40 +57,26 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
             R.drawable.n2, R.drawable.n3, R.drawable.n4, R.drawable.n5,
             R.drawable.n6, R.drawable.n7, R.drawable.n8, R.drawable.n9};
     private Bitmap[] mNumBitmap;
-    private int mGrade = 100;
+    private int mGrade = 0;
 
-    private static final float RADIO_SINGLE_NUM_HEIGHT = 1 / 15f;
-
+    private static final float RATIO_SINGLE_NUM_HEIGHT = 1 / 15f;
     private int mSingleGradeWidth;
-
     private int mSingleGradeHeight;
-
     private RectF mSingleNumRectF;
-
     private static final int PIPE_WIDTH = 60;
-
-    private List<Pipe> mPipes = new ArrayList<Pipe>();
+    private List<Pipe> mPipes = new ArrayList<>();
 
     private enum GameStatus {
-        WAITTING, RUNNING, STOP;
+        WAITING, RUNNING, STOP
     }
-
-    private GameStatus mStatus = GameStatus.WAITTING;
-
+    private GameStatus mStatus = GameStatus.WAITING;
     private static final int TOUCH_UP_SIZE = -16;
-
-    private final int mBirdUpDis = Util.dp2px(getContext(), TOUCH_UP_SIZE);
-
     private int mTmpBirdDis;
-
     private final int mAutoDownSpeed = Util.dp2px(getContext(), 2);
-
     private final int PIPE_DIS_BETWEEN_TWO = Util.dp2px(getContext(), 100);
-
+    private final int mBirdUpDis = Util.dp2px(getContext(), TOUCH_UP_SIZE);
     private int mTmpMoveDistance;
-
-    private List<Pipe> mNeedRemovePipe = new ArrayList<Pipe>();
-
+    private List<Pipe> mNeedRemovePipe = new ArrayList<>();
     private int mRemovedPipe = 0;
 
     public FlappyBirdSurfaceView(Context context) {
@@ -115,7 +101,6 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
 
         initBitmaps();
 
-        mSpeed = Util.dp2px(getContext(), 2);
         mPipeWidth = Util.dp2px(getContext(), PIPE_WIDTH);
     }
 
@@ -157,18 +142,20 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
-        mWidth = w;
-        mHeight = h;
+        mGameWidth = w;
+        mGameHeight = h;
         mGamePanelRect.set(0, 0, w, h);
-        mBird = new Bird(getContext(), mWidth, mHeight, mBirdBitmap);
-        mFloor = new Floor(mWidth, mHeight, mFloorBitmap);
+        mBird = new Bird(getContext(), mGameWidth, mGameHeight, mBirdBitmap);
+        mFloor = new Floor(mGameWidth, mGameHeight, mFloorBitmap);
 
-        mPipeRect = new RectF(0, 0, mPipeWidth, mHeight);
+        mPipeRect = new RectF(0, 0, mPipeWidth, mGameHeight);
 
-        mSingleGradeHeight = (int) (h * RADIO_SINGLE_NUM_HEIGHT);
+        mSingleGradeHeight = (int) (h * RATIO_SINGLE_NUM_HEIGHT);
         mSingleGradeWidth = (int) (mSingleGradeHeight * 1.0f
                 / mNumBitmap[0].getHeight() * mNumBitmap[0].getWidth());
         mSingleNumRectF = new RectF(0, 0, mSingleGradeWidth, mSingleGradeHeight);
+        Pipe pipe = new Pipe(getWidth(), getHeight(), mPipeTop, mPipeBottom);
+        mPipes.add(pipe);
     }
 
     @Override
@@ -176,7 +163,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
         int action = event.getAction();
         if (action == MotionEvent.ACTION_DOWN) {
             switch (mStatus) {
-                case WAITTING:
+                case WAITING:
                     mStatus = GameStatus.RUNNING;
                     break;
                 case RUNNING:
@@ -190,6 +177,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
     private void logic() {
         switch (mStatus) {
             case RUNNING:
+                mSpeed = Util.dp2px(getContext(), 2);
                 mGrade = 0;
                 mFloor.setX(mFloor.getX() - mSpeed);
                 logicPipe();
@@ -197,19 +185,22 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
                 mBird.setY(mBird.getY() + mTmpBirdDis);
                 mGrade += mRemovedPipe;
                 for (Pipe pipe : mPipes) {
-                    if (pipe.getX() + mPipeWidth < mBird.getX()) {
+                    if (pipe.getPipeX() + mPipeWidth < mBird.getX()) {
                         mGrade++;
                     }
                 }
                 checkGameOver();
                 break;
             case STOP:
-                if (mBird.getY() < mFloor.getY() - mBird.getBirdWidth()) {
+                mSpeed = 0;
+                mGrade = 0;
+                mRemovedPipe = 0;
+                if (mBird.getY() < mFloor.getY() - mBird.getBirdHeight()) {
                     mTmpBirdDis += mAutoDownSpeed;
                     mBird.setY(mBird.getY() + mTmpBirdDis);
                 } else {
-                    mStatus = GameStatus.WAITTING;
-                    initPos();
+                    mStatus = GameStatus.WAITING;
+                    initPosition();
                 }
                 break;
             default:
@@ -262,16 +253,16 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
 
     private void drawPipes() {
         for (Pipe pipe : mPipes) {
-            pipe.setX(pipe.getX() - mSpeed);
+            pipe.setPipeX(pipe.getPipeX() - 2*mSpeed);
             pipe.draw(mCanvas, mPipeRect);
         }
     }
 
     private void drawGrades() {
         String grade = mGrade + "";
-        mCanvas.save(Canvas.MATRIX_SAVE_FLAG);
-        mCanvas.translate(mWidth / 2 - grade.length() * mSingleGradeWidth / 2,
-                1f / 8 * mHeight);
+        mCanvas.save();
+        mCanvas.translate(mGameWidth / 2 - grade.length() * mSingleGradeWidth / 2,
+                1f / 8 * mGameHeight);
         // draw single num one by one
         for (int i = 0; i < grade.length(); i++) {
             String numStr = grade.substring(i, i + 1);
@@ -284,20 +275,18 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
 
     private void logicPipe() {
         for (Pipe pipe : mPipes) {
-            if (pipe.getX() < -mPipeWidth) {
+            if (pipe.getPipeX() < -mPipeWidth) {
                 mNeedRemovePipe.add(pipe);
                 mRemovedPipe++;
                 continue;
             }
-            pipe.setX(pipe.getX() - mSpeed);
         }
         mPipes.removeAll(mNeedRemovePipe);
         mNeedRemovePipe.clear();
 
         mTmpMoveDistance += mSpeed;
         if (mTmpMoveDistance >= PIPE_DIS_BETWEEN_TWO) {
-            Pipe pipe = new Pipe(getContext(), getWidth(), getHeight(),
-                    mPipeTop, mPipeBottom);
+            Pipe pipe = new Pipe(getWidth(), getHeight(), mPipeTop, mPipeBottom);
             mPipes.add(pipe);
             mTmpMoveDistance = 0;
         }
@@ -313,7 +302,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
             mStatus = GameStatus.STOP;
         }
         for (Pipe wall : mPipes) {
-            if (wall.getX() + mPipeWidth < mBird.getX()) {
+            if (wall.getPipeX() + mPipeWidth < mBird.getX()) {
                 continue;
             }
             if (wall.touchBird(mBird)) {
@@ -323,10 +312,10 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
         }
     }
 
-    private void initPos() {
+    private void initPosition() {
         mPipes.clear();
         mNeedRemovePipe.clear();
-        mBird.setY(mHeight * 2 / 3);
+        mBird.setY(mGameHeight * 4 / 7);
         mTmpBirdDis = 0;
         mTmpMoveDistance = 0;
     }

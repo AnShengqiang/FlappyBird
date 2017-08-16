@@ -13,7 +13,7 @@ import com.example.charger.flappybird.utils.Util;
 
 public class Bird {
 
-    private static final float RATIO_BIRD_POSITION_HEIGHT = 3/5F;
+    private static final float RATIO_BIRD_POSITION_HEIGHT = 4 / 7F;
 
     private static final int RATIO_BIRD_SIZE = 35;
 
@@ -27,14 +27,14 @@ public class Bird {
 
     public Bird(Context context, int gameWidth, int gameHeight, Bitmap bitmap) {
         this.mBitmap = bitmap;
-        x = gameWidth/2 - bitmap.getWidth()/2;
+        x = gameWidth / 2 - bitmap.getWidth() / 2;
         y = (int) (gameHeight * RATIO_BIRD_POSITION_HEIGHT);
         mBirdWidth = Util.dp2px(context, RATIO_BIRD_SIZE);
         mBirdHeight = (int) (mBirdWidth * 1.0f / bitmap.getWidth() * bitmap.getHeight());
     }
 
     public void draw(Canvas canvas) {
-        mRectF.set(x, y, x+mBirdWidth, y+mBirdHeight);
+        mRectF.set(x, y, x + mBirdWidth, y + mBirdHeight);
         canvas.drawBitmap(mBitmap, null, mRectF, null);
     }
 
