@@ -13,41 +13,33 @@ import com.example.charger.flappybird.utils.Util;
 
 public class Bird {
 
-    private static final float RADIO_POS_HEIGHT = 2 / 3F;
+    private static final float RATIO_BIRD_POSITION_HEIGHT = 3/5F;
 
-    private static final int BIRD_SIZE = 30;
+    private static final int RATIO_BIRD_SIZE = 35;
 
     private int x;
-
     private int y;
-
-    private int mWidth;
-
-    private int mHeight;
+    private int mBirdWidth;
+    private int mBirdHeight;
 
     private Bitmap mBitmap;
-
     private RectF mRectF = new RectF();
 
     public Bird(Context context, int gameWidth, int gameHeight, Bitmap bitmap) {
         this.mBitmap = bitmap;
         x = gameWidth/2 - bitmap.getWidth()/2;
-        y = (int) (gameHeight * RADIO_POS_HEIGHT);
-        mWidth = Util.dp2px(context, BIRD_SIZE);
-        mHeight = (int) (mWidth * 1.0f / bitmap.getWidth() * bitmap.getHeight());
+        y = (int) (gameHeight * RATIO_BIRD_POSITION_HEIGHT);
+        mBirdWidth = Util.dp2px(context, RATIO_BIRD_SIZE);
+        mBirdHeight = (int) (mBirdWidth * 1.0f / bitmap.getWidth() * bitmap.getHeight());
     }
 
     public void draw(Canvas canvas) {
-        mRectF.set(x, y, x + mWidth, y + mHeight);
+        mRectF.set(x, y, x+mBirdWidth, y+mBirdHeight);
         canvas.drawBitmap(mBitmap, null, mRectF, null);
     }
 
     public int getX() {
         return x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
     }
 
     public int getY() {
@@ -58,19 +50,12 @@ public class Bird {
         this.y = y;
     }
 
-    public int getWidth() {
-        return mWidth;
+    public int getBirdWidth() {
+        return mBirdWidth;
     }
 
-    public void setWidth(int width) {
-        mWidth = width;
+    public int getBirdHeight() {
+        return mBirdHeight;
     }
 
-    public int getHeight() {
-        return mHeight;
-    }
-
-    public void setHeight(int height) {
-        mHeight = height;
-    }
 }
