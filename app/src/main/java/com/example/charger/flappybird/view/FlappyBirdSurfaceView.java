@@ -69,6 +69,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
     private enum GameStatus {
         WAITING, RUNNING, STOP
     }
+
     private GameStatus mStatus = GameStatus.WAITING;
     private static final int TOUCH_UP_SIZE = -16;
     private int mTmpBirdDis;
@@ -164,6 +165,8 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
         if (action == MotionEvent.ACTION_DOWN) {
             switch (mStatus) {
                 case WAITING:
+                    mGrade = 0;
+                    mRemovedPipe = 0;
                     mStatus = GameStatus.RUNNING;
                     break;
                 case RUNNING:
@@ -193,8 +196,6 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
                 break;
             case STOP:
                 mSpeed = 0;
-                mGrade = 0;
-                mRemovedPipe = 0;
                 if (mBird.getY() < mFloor.getY() - mBird.getBirdHeight()) {
                     mTmpBirdDis += mAutoDownSpeed;
                     mBird.setY(mBird.getY() + mTmpBirdDis);
@@ -221,7 +222,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
                 mFloor.setX(mFloor.getX() - mSpeed);
             }
         } catch (Exception e) {
-            Log.i("FlappyBirdSV", "出现不明错误");
+            Log.i("FlappyBirdSV", "出现错误");
         } finally {
             mSurfaceHolder.unlockCanvasAndPost(mCanvas);
         }
@@ -253,7 +254,7 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
 
     private void drawPipes() {
         for (Pipe pipe : mPipes) {
-            pipe.setPipeX(pipe.getPipeX() - 2*mSpeed);
+            pipe.setPipeX(pipe.getPipeX() - 2 * mSpeed);
             pipe.draw(mCanvas, mPipeRect);
         }
     }
@@ -263,7 +264,6 @@ public class FlappyBirdSurfaceView extends SurfaceView implements Callback, Runn
         mCanvas.save();
         mCanvas.translate(mGameWidth / 2 - grade.length() * mSingleGradeWidth / 2,
                 1f / 8 * mGameHeight);
-        // draw single num one by one
         for (int i = 0; i < grade.length(); i++) {
             String numStr = grade.substring(i, i + 1);
             int num = Integer.valueOf(numStr);
